@@ -1,0 +1,173 @@
+import {
+  contrastRatio,
+  parseHex,
+  tailorForeground
+} from "/contrast.mjs";
+
+const form = document.querySelector("#contrast-form");
+const foregroundInput = document.querySelector("#foreground");
+const foregroundPicker = document.querySelector("#foreground-picker");
+const backgroundInput = document.querySelector("#background");
+const backgroundPicker = document.querySelector("#background-picker");
+const targetInput = document.querySelector("#target");
+const status = document.querySelector("#status");
+const error = document.querySelector("#error");
+const list = document.querySelector("#candidate-list");
+const sample = document.querySelector("#sample");
+const currentRatio = document.querySelector("#current-ratio");
+const selectedRatio = document.querySelector("#selected-ratio");
+const selectedDistance = document.querySelector("#selected-distance");
+const searchButton = document.querySelector("#search-button");
+const cancelButton = document.querySelector("#cancel-button");
+
+let activeController = null;
+
+function invalidateCandidates(message = "Inputs changed. Search again for measurements based on this pair.") {
+  activeController?.abort();
+  list.replaceChildren();
+  const item = document.createElement("li");
+  item.className = "empty";
+  item.textContent = message;
+  list.append(item);
+  selectedRatio.textContent = "—";
+  selectedDistance.textContent = "—";
+  status.textContent = message;
+}
+
+function syncTextAndPicker(text, picker) {
+  picker.addEventListener("input", () => {
+    text.value = picker.value.toUpperCase();
+    updateCurrentMeasurement();
+    invalidateCandidates();
+  });
+  text.addEventListener("input", () => {
+    if (/^#[0-9a-f]{6}$/i.test(text.value)) {
+      picker.value = text.value;
+    }
+    updateCurrentMeasurement();
+    invalidateCandidates();
+  });
+}
+
+function setBusy(isBusy, message = "") {
+  form.setAttribute("aria-busy", String(isBusy));
+  status.dataset.loading = String(isBusy);
+  status.textContent = message;
+  searchButton.disabled = isBusy;
+  cancelButton.hidden = !isBusy;
+}
+
+function showError(message) {
+  error.textContent = message;
+  error.hidden = false;
+}
+
+function clearError() {
+  error.textContent = "";
+  error.hidden = true;
+}
+
+function updateCurrentMeasurement() {
+  try {
+    const foreground = parseHex(foregroundInput.value);
+    const background = parseHex(backgroundInput.value);
+    currentRatio.textContent = `${contrastRatio(foreground, background).toFixed(2)}:1`;
+    sample.style.color = foregroundInput.value;
+    sample.style.background = backgroundInput.value;
+  } catch {
+    currentRatio.textContent = "Invalid pair";
+  }
+}
+
+function selectCandidate(candidate, button) {
+  foregroundInput.value = candidate.hex;
+  foregroundPicker.value = candidate.hex;
+  updateCurrentMeasurement();
+  selectedRatio.textContent = `${candidate.ratio.toFixed(2)}:1`;
+  selectedDistance.textContent = candidate.distance.toFixed(3);
+  for (const candidateButton of list.querySelectorAll("button")) {
+    candidateButton.removeAttribute("aria-current");
+  }
+  button.setAttribute("aria-current", "true");
+  status.textContent = `${candidate.hex} selected at ${candidate.ratio.toFixed(2)} to 1.`;
+}
+
+function renderCandidates(candidates) {
+  list.replaceChildren();
+  if (candidates.length === 0) {
+    const item = document.createElement("li");
+    item.className = "empty";
+    item.textContent = "No colour met the selected target while preserving the colour direction.";
+    list.append(item);
+    return;
+  }
+  for (const candidate of candidates) {
+    const item = document.createElement("li");
+    const swatch = document.createElement("span");
+    swatch.className = "swatch";
+    swatch.style.background = candidate.hex;
+    swatch.setAttribute("aria-hidden", "true");
+
+    const details = document.createElement("span");
+    details.className = "candidate-meta";
+    const name = document.createElement("strong");
+    name.textContent = candidate.hex;
+    const measurements = document.createElement("span");
+    measurements.textContent = `${candidate.ratio.toFixed(2)}:1 · ${candidate.direction} · distance ${candidate.distance.toFixed(3)}`;
+    details.append(name, measurements);
+
+    const choose = document.createElement("button");
+    choose.type = "button";
+    choose.textContent = "Fit this colour";
+    choose.addEventListener("click", () => selectCandidate(candidate, choose));
+    item.append(swatch, details, choose);
+    list.append(item);
+  }
+}
+
+async function waitForPaint(signal) {
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, 180);
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(timer);
+        reject(new DOMException("Search cancelled", "AbortError"));
+      },
+      { once: true }
+    );
+  });
+}
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  activeController?.abort();
+  activeController = new AbortController();
+  clearError();
+  setBusy(true, "Searching the perceptual lightness range…");
+  try {
+    const foreground = parseHex(foregroundInput.value);
+    const background = parseHex(backgroundInput.value);
+    const target = Number.parseFloat(targetInput.value);
+    await waitForPaint(activeController.signal);
+    const candidates = tailorForeground(foreground, background, target);
+    renderCandidates(candidates);
+    setBusy(false, `${candidates.length} measured alternatives found.`);
+  } catch (caught) {
+    setBusy(false);
+    if (caught.name === "AbortError") {
+      status.textContent = "Search cancelled. Run a fresh search for the current inputs.";
+    } else {
+      showError(caught instanceof Error ? caught.message : "The colour search failed.");
+      status.textContent = "Search could not be completed.";
+    }
+  } finally {
+    activeController = null;
+  }
+});
+
+cancelButton.addEventListener("click", () => activeController?.abort());
+targetInput.addEventListener("input", () => invalidateCandidates("Contrast target changed. Search again for measured alternatives."));
+syncTextAndPicker(foregroundInput, foregroundPicker);
+syncTextAndPicker(backgroundInput, backgroundPicker);
+updateCurrentMeasurement();

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Tailor a foreground colour to a measured contrast target.">
+    <title>Contrast Tailor</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <header class="masthead">
+      <p class="kicker">Colour fitting room</p>
+      <h1>Contrast Tailor</h1>
+      <p>Meet a contrast target with the smallest measured change to the foreground.</p>
+    </header>
+
+    <main>
+      <section class="workbench" aria-labelledby="measure-heading">
+        <div class="controls">
+          <h2 id="measure-heading">Take the measurements</h2>
+          <form id="contrast-form">
+            <label>
+              Foreground
+              <span class="colour-input">
+                <input id="foreground-picker" type="color" value="#5C6CBE" aria-label="Foreground colour picker">
+                <input id="foreground" value="#5C6CBE" maxlength="7" spellcheck="false">
+              </span>
+            </label>
+            <label>
+              Background
+              <span class="colour-input">
+                <input id="background-picker" type="color" value="#FFFFFF" aria-label="Background colour picker">
+                <input id="background" value="#FFFFFF" maxlength="7" spellcheck="false">
+              </span>
+            </label>
+            <label>
+              Contrast target
+              <select id="target">
+                <option value="3">3:1 — large text or graphical object</option>
+                <option value="4.5" selected>4.5:1 — ordinary text</option>
+                <option value="7">7:1 — enhanced text contrast</option>
+              </select>
+            </label>
+            <div class="actions">
+              <button type="submit" id="search-button">Find tailored colours</button>
+              <button type="button" id="cancel-button" class="quiet" hidden>Cancel search</button>
+            </div>
+          </form>
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+          <p id="error" class="error" role="alert" hidden></p>
+        </div>
+
+        <div class="sample-wrap">
+          <article id="sample" class="sample" aria-label="Colour pair preview">
+            <p class="sample-label">Interface sample</p>
+            <h2>A quieter change can still be exact.</h2>
+            <p>Candidate colours preserve the original OKLab direction while adjusting lightness.</p>
+            <button type="button">Example action</button>
+          </article>
+          <dl class="measurement">
+            <div><dt>Current ratio</dt><dd id="current-ratio">—</dd></div>
+            <div><dt>Selected ratio</dt><dd id="selected-ratio">—</dd></div>
+            <div><dt>Perceptual change</dt><dd id="selected-distance">—</dd></div>
+          </dl>
+        </div>
+      </section>
+
+      <section class="candidates" aria-labelledby="candidates-heading">
+        <div>
+          <p class="kicker">Fittings</p>
+          <h2 id="candidates-heading">Measured alternatives</h2>
+        </div>
+        <ol id="candidate-list" class="candidate-list">
+          <li class="empty">Run a search to compare exact candidates.</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer>
+      <p>All calculations remain in this browser. Contrast is one accessibility measure, not a complete accessibility assessment.</p>
+    </footer>
+    <script type="module" src="/app.mjs"></script>
+  </body>
+</html>

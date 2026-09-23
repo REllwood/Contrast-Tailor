@@ -1,0 +1,24 @@
+{
+  "name": "contrast-tailor",
+  "version": "0.1.0",
+  "description": "Adjust an inaccessible colour pair while preserving the character of the palette.",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/REllwood/contrast-tailor.git"
+  },
+  "homepage": "https://github.com/REllwood/contrast-tailor#readme",
+  "bugs": {
+    "url": "https://github.com/REllwood/contrast-tailor/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test",
+    "check": "npm test && node --check server.mjs && node --check src/contrast.mjs && node --check public/app.mjs"
+  }
+}
