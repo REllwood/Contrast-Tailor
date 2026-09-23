@@ -6,11 +6,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/REllwood/ContrastTailor.git"
+    "url": "git+https://github.com/REllwood/Contrast-Tailor.git"
   },
-  "homepage": "https://github.com/REllwood/ContrastTailor#readme",
+  "homepage": "https://github.com/REllwood/Contrast-Tailor#readme",
   "bugs": {
-    "url": "https://github.com/REllwood/ContrastTailor/issues"
+    "url": "https://github.com/REllwood/Contrast-Tailor/issues"
   },
   "type": "module",
   "engines": {

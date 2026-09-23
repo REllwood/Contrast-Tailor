@@ -25,8 +25,8 @@ When a brand colour fails WCAG contrast, the usual fix is to darken it until it 
 Requires Node.js 22 or newer. No `npm install` needed.
 
 ```sh
-git clone https://github.com/REllwood/ContrastTailor.git
-cd ContrastTailor
+git clone https://github.com/REllwood/Contrast-Tailor.git
+cd Contrast-Tailor
 npm start
 ```
 
