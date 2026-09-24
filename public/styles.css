@@ -44,11 +44,6 @@ select:focus-visible {
   outline-offset: 3px;
 }
 
-.quiet {
-  background: transparent;
-  color: var(--ink);
-}
-
 .masthead,
 main,
 footer {
@@ -138,29 +133,6 @@ input[type="color"] {
 
 .status {
   min-height: 1.5rem;
-}
-
-.status[data-loading="true"]::before {
-  content: "";
-  display: inline-block;
-  width: 0.8rem;
-  height: 0.8rem;
-  margin-right: 0.55rem;
-  border: 2px solid var(--rule);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: turn 0.8s linear infinite;
-}
-
-@keyframes turn {
-  to { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .status[data-loading="true"]::before {
-    animation: none;
-    border-color: var(--accent);
-  }
 }
 
 .error {
@@ -272,8 +244,7 @@ input[type="color"] {
 }
 
 .candidate-list button:hover,
-.candidate-list button[aria-current="true"],
-.quiet:hover {
+.candidate-list button[aria-current="true"] {
   background: var(--ink);
   color: white;
 }
