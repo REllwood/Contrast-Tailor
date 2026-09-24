@@ -8,7 +8,7 @@ import {
   rgbToOklab,
   tailorForeground,
   toHex
-} from "../src/contrast.mjs";
+} from "../public/contrast.mjs";
 
 const hueOf = (colour) => oklabToOklch(rgbToOklab(colour)).h;
 const hueDifference = (first, second) =>

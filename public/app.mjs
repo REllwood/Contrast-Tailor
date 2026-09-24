@@ -3,7 +3,7 @@ import {
   parseHex,
   tailorForeground,
   toHex
-} from "/contrast.mjs";
+} from "./contrast.mjs";
 
 const form = document.querySelector("#contrast-form");
 const foregroundInput = document.querySelector("#foreground");

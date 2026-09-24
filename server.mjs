@@ -4,7 +4,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), "public");
-const sourceRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "src");
 const portArgument = process.argv.find((value) => value.startsWith("--port="));
 const requestedPort = Number.parseInt(portArgument?.split("=")[1] ?? process.env.PORT ?? "4173", 10);
 const port = Number.isFinite(requestedPort) ? requestedPort : 4173;
@@ -17,17 +16,16 @@ const contentTypes = new Map([
 ]);
 
 const server = createServer(async (request, response) => {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    response.writeHead(405, { allow: "GET, HEAD", "content-type": "text/plain; charset=utf-8" });
+    response.end("Method not allowed");
+    return;
+  }
   try {
     const requestedPath = new URL(request.url ?? "/", "http://localhost").pathname;
     const relativePath = requestedPath === "/" ? "index.html" : requestedPath.slice(1);
-    const candidate =
-      requestedPath === "/contrast-core.mjs"
-        ? path.join(sourceRoot, "contrast.mjs")
-        : path.resolve(root, relativePath);
-    const isPublicFile =
-      candidate.startsWith(`${root}${path.sep}`) || candidate === path.join(root, "index.html");
-    const isPublicCore = candidate === path.join(sourceRoot, "contrast.mjs");
-    if (!isPublicFile && !isPublicCore) {
+    const candidate = path.resolve(root, relativePath);
+    if (!candidate.startsWith(`${root}${path.sep}`)) {
       response.writeHead(403).end("Forbidden");
       return;
     }
@@ -39,9 +37,10 @@ const server = createServer(async (request, response) => {
     const body = await readFile(candidate);
     response.writeHead(200, {
       "content-type": contentTypes.get(path.extname(candidate)) ?? "application/octet-stream",
+      "content-length": body.length,
       "cache-control": "no-store"
     });
-    response.end(body);
+    response.end(request.method === "HEAD" ? undefined : body);
   } catch {
     response.writeHead(404, { "content-type": "text/plain; charset=utf-8" });
     response.end("Not found");
