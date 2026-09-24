@@ -19,13 +19,8 @@ const currentRatio = document.querySelector("#current-ratio");
 const currentVerdict = document.querySelector("#current-verdict");
 const selectedRatio = document.querySelector("#selected-ratio");
 const selectedDistance = document.querySelector("#selected-distance");
-const searchButton = document.querySelector("#search-button");
-const cancelButton = document.querySelector("#cancel-button");
-
-let activeController = null;
 
 function invalidateCandidates(message = "Inputs changed. Search again for measurements based on this pair.") {
-  activeController?.abort();
   list.replaceChildren();
   const item = document.createElement("li");
   item.className = "empty";
@@ -59,14 +54,6 @@ function syncTextAndPicker(text, picker) {
       // Keep what was typed so it can be corrected; the search reports the error.
     }
   });
-}
-
-function setBusy(isBusy, message = "") {
-  form.setAttribute("aria-busy", String(isBusy));
-  status.dataset.loading = String(isBusy);
-  status.textContent = message;
-  searchButton.disabled = isBusy;
-  cancelButton.hidden = !isBusy;
 }
 
 function showError(message) {
@@ -159,54 +146,27 @@ function renderCandidates(candidates) {
   }
 }
 
-async function waitForPaint(signal) {
-  await new Promise((resolve, reject) => {
-    const timer = setTimeout(resolve, 180);
-    signal.addEventListener(
-      "abort",
-      () => {
-        clearTimeout(timer);
-        reject(new DOMException("Search cancelled", "AbortError"));
-      },
-      { once: true }
-    );
-  });
-}
-
-form.addEventListener("submit", async (event) => {
+// The search takes a few milliseconds, so it runs straight away rather than
+// behind a spinner.
+form.addEventListener("submit", (event) => {
   event.preventDefault();
-  activeController?.abort();
-  activeController = new AbortController();
   clearError();
-  setBusy(true, "Searching the perceptual lightness range…");
   try {
     const foreground = parseHex(foregroundInput.value);
     const background = parseHex(backgroundInput.value);
     const target = Number.parseFloat(targetInput.value);
-    await waitForPaint(activeController.signal);
     const candidates = tailorForeground(foreground, background, target);
     renderCandidates(candidates);
-    const alreadyMeets = candidates[0]?.direction === "unchanged";
-    setBusy(
-      false,
-      alreadyMeets
+    status.textContent =
+      candidates[0]?.direction === "unchanged"
         ? `${candidates[0].hex} already meets ${target}:1 against this background. No change needed.`
-        : `${candidates.length} measured alternatives found.`
-    );
+        : `${candidates.length} measured alternatives found.`;
   } catch (caught) {
-    setBusy(false);
-    if (caught.name === "AbortError") {
-      status.textContent = "Search cancelled. Run a fresh search for the current inputs.";
-    } else {
-      showError(caught instanceof Error ? caught.message : "The colour search failed.");
-      status.textContent = "Search could not be completed.";
-    }
-  } finally {
-    activeController = null;
+    showError(caught instanceof Error ? caught.message : "The colour search failed.");
+    status.textContent = "Search could not be completed.";
   }
 });
 
-cancelButton.addEventListener("click", () => activeController?.abort());
 targetInput.addEventListener("input", () => {
   updateCurrentMeasurement();
   invalidateCandidates("Contrast target changed. Search again for measured alternatives.");
