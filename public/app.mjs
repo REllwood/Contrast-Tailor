@@ -15,6 +15,7 @@ const error = document.querySelector("#error");
 const list = document.querySelector("#candidate-list");
 const sample = document.querySelector("#sample");
 const currentRatio = document.querySelector("#current-ratio");
+const currentVerdict = document.querySelector("#current-verdict");
 const selectedRatio = document.querySelector("#selected-ratio");
 const selectedDistance = document.querySelector("#selected-distance");
 const searchButton = document.querySelector("#search-button");
@@ -67,15 +68,24 @@ function clearError() {
   error.hidden = true;
 }
 
+// Truncate rather than round so a failing 4.497 never reads as a passing 4.50.
+function formatRatio(ratio) {
+  return (Math.floor(ratio * 100 + 1e-9) / 100).toFixed(2);
+}
+
 function updateCurrentMeasurement() {
   try {
     const foreground = parseHex(foregroundInput.value);
     const background = parseHex(backgroundInput.value);
-    currentRatio.textContent = `${contrastRatio(foreground, background).toFixed(2)}:1`;
+    const ratio = contrastRatio(foreground, background);
+    const target = Number.parseFloat(targetInput.value);
+    currentRatio.textContent = `${formatRatio(ratio)}:1`;
+    currentVerdict.textContent = `${ratio + Number.EPSILON >= target ? "Meets" : "Below"} ${target}:1`;
     sample.style.color = foregroundInput.value;
     sample.style.background = backgroundInput.value;
   } catch {
     currentRatio.textContent = "Invalid pair";
+    currentVerdict.textContent = "";
   }
 }
 
@@ -83,13 +93,13 @@ function selectCandidate(candidate, button) {
   foregroundInput.value = candidate.hex;
   foregroundPicker.value = candidate.hex;
   updateCurrentMeasurement();
-  selectedRatio.textContent = `${candidate.ratio.toFixed(2)}:1`;
+  selectedRatio.textContent = `${formatRatio(candidate.ratio)}:1`;
   selectedDistance.textContent = candidate.distance.toFixed(3);
   for (const candidateButton of list.querySelectorAll("button")) {
     candidateButton.removeAttribute("aria-current");
   }
   button.setAttribute("aria-current", "true");
-  status.textContent = `${candidate.hex} selected at ${candidate.ratio.toFixed(2)} to 1.`;
+  status.textContent = `${candidate.hex} selected at ${formatRatio(candidate.ratio)} to 1.`;
 }
 
 function describeChroma(candidate) {
@@ -120,8 +130,14 @@ function renderCandidates(candidates) {
     const name = document.createElement("strong");
     name.textContent = candidate.hex;
     const measurements = document.createElement("span");
-    measurements.textContent = `${candidate.ratio.toFixed(2)}:1 · ${candidate.direction} · ${describeChroma(candidate)} · distance ${candidate.distance.toFixed(3)}`;
     details.append(name, measurements);
+    if (candidate.direction === "unchanged") {
+      measurements.textContent = `${formatRatio(candidate.ratio)}:1 · already meets the target`;
+      item.append(swatch, details);
+      list.append(item);
+      continue;
+    }
+    measurements.textContent = `${formatRatio(candidate.ratio)}:1 · ${candidate.direction} · ${describeChroma(candidate)} · distance ${candidate.distance.toFixed(3)}`;
 
     const choose = document.createElement("button");
     choose.type = "button";
@@ -159,7 +175,13 @@ form.addEventListener("submit", async (event) => {
     await waitForPaint(activeController.signal);
     const candidates = tailorForeground(foreground, background, target);
     renderCandidates(candidates);
-    setBusy(false, `${candidates.length} measured alternatives found.`);
+    const alreadyMeets = candidates[0]?.direction === "unchanged";
+    setBusy(
+      false,
+      alreadyMeets
+        ? `${candidates[0].hex} already meets ${target}:1 against this background. No change needed.`
+        : `${candidates.length} measured alternatives found.`
+    );
   } catch (caught) {
     setBusy(false);
     if (caught.name === "AbortError") {
@@ -174,7 +196,10 @@ form.addEventListener("submit", async (event) => {
 });
 
 cancelButton.addEventListener("click", () => activeController?.abort());
-targetInput.addEventListener("input", () => invalidateCandidates("Contrast target changed. Search again for measured alternatives."));
+targetInput.addEventListener("input", () => {
+  updateCurrentMeasurement();
+  invalidateCandidates("Contrast target changed. Search again for measured alternatives.");
+});
 syncTextAndPicker(foregroundInput, foregroundPicker);
 syncTextAndPicker(backgroundInput, backgroundPicker);
 updateCurrentMeasurement();

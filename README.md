@@ -14,7 +14,7 @@ When a brand colour fails WCAG contrast, the usual fix is to darken it until it 
 
 ## What it does
 
-- Calculates the WCAG contrast ratio for any foreground and background
+- Calculates the WCAG contrast ratio for any foreground and background, and tells you when a pair already meets the target instead of suggesting needless changes
 - Searches for foreground alternatives in OKLab that keep the original hue, changing lightness first and giving up chroma only when sRGB cannot show the colour otherwise
 - Finds the exact point where each candidate starts to pass, so it never overshoots the target by more than it has to
 - Previews the proposed pair next to the current one
