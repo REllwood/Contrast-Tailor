@@ -10,14 +10,15 @@
 
 </div>
 
-When a brand colour fails WCAG contrast, the usual fix is to darken it until it passes, and it stops looking like the brand. Contrast Tailor searches for the smallest change that meets your target while keeping the colour's direction in OKLab, then shows you exactly what it gave up to get there.
+When a brand colour fails WCAG contrast, the usual fix is to darken it until it passes, and it stops looking like the brand. Contrast Tailor searches for the smallest change that meets your target while keeping the colour's hue in OKLab, then shows you exactly what it gave up to get there.
 
 ## What it does
 
 - Calculates the WCAG contrast ratio for any foreground and background
-- Searches for foreground alternatives in OKLab that keep the original colour direction
+- Searches for foreground alternatives in OKLab that keep the original hue, changing lightness first and giving up chroma only when sRGB cannot show the colour otherwise
+- Finds the exact point where each candidate starts to pass, so it never overshoots the target by more than it has to
 - Previews the proposed pair next to the current one
-- Explains the measured trade-off for every candidate
+- Explains the measured trade-off for every candidate: direction, chroma kept and perceptual distance
 - Gives the same answer every time, and never edits your token files
 
 ## Quick start

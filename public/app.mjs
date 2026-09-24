@@ -92,12 +92,19 @@ function selectCandidate(candidate, button) {
   status.textContent = `${candidate.hex} selected at ${candidate.ratio.toFixed(2)} to 1.`;
 }
 
+function describeChroma(candidate) {
+  if (candidate.chromaRetained === null) return "neutral";
+  const percentage = Math.round(candidate.chromaRetained * 100);
+  return percentage === 100 ? "full chroma" : `${percentage}% chroma`;
+}
+
 function renderCandidates(candidates) {
   list.replaceChildren();
   if (candidates.length === 0) {
     const item = document.createElement("li");
     item.className = "empty";
-    item.textContent = "No colour met the selected target while preserving the colour direction.";
+    item.textContent =
+      "No foreground colour reaches this target against this background, not even black or white.";
     list.append(item);
     return;
   }
@@ -113,7 +120,7 @@ function renderCandidates(candidates) {
     const name = document.createElement("strong");
     name.textContent = candidate.hex;
     const measurements = document.createElement("span");
-    measurements.textContent = `${candidate.ratio.toFixed(2)}:1 · ${candidate.direction} · distance ${candidate.distance.toFixed(3)}`;
+    measurements.textContent = `${candidate.ratio.toFixed(2)}:1 · ${candidate.direction} · ${describeChroma(candidate)} · distance ${candidate.distance.toFixed(3)}`;
     details.append(name, measurements);
 
     const choose = document.createElement("button");
