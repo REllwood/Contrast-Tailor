@@ -174,14 +174,16 @@ input[type="color"] {
 }
 
 .sample {
+  --sample-foreground: #7282d8;
+  --sample-background: #fff;
   min-height: 22rem;
   display: grid;
   align-content: center;
   gap: 0.7rem;
   padding: clamp(2rem, 6vw, 5rem);
   border: 1px solid var(--ink);
-  background: #fff;
-  color: #7282d8;
+  background: var(--sample-background);
+  color: var(--sample-foreground);
 }
 
 .sample h2 {
@@ -192,9 +194,12 @@ input[type="color"] {
   line-height: 1;
 }
 
+/* The same pair reversed, so the button has the contrast being measured. */
 .sample button {
   justify-self: start;
-  background: currentColor;
+  border-color: var(--sample-foreground);
+  background: var(--sample-foreground);
+  color: var(--sample-background);
 }
 
 .sample-label {
@@ -264,6 +269,13 @@ input[type="color"] {
 .candidate-list button {
   background: transparent;
   color: var(--ink);
+}
+
+.candidate-list button:hover,
+.candidate-list button[aria-current="true"],
+.quiet:hover {
+  background: var(--ink);
+  color: white;
 }
 
 .swatch {

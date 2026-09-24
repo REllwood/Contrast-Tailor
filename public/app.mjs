@@ -1,7 +1,8 @@
 import {
   contrastRatio,
   parseHex,
-  tailorForeground
+  tailorForeground,
+  toHex
 } from "/contrast.mjs";
 
 const form = document.querySelector("#contrast-form");
@@ -33,6 +34,7 @@ function invalidateCandidates(message = "Inputs changed. Search again for measur
   selectedRatio.textContent = "—";
   selectedDistance.textContent = "—";
   status.textContent = message;
+  clearError();
 }
 
 function syncTextAndPicker(text, picker) {
@@ -42,11 +44,20 @@ function syncTextAndPicker(text, picker) {
     invalidateCandidates();
   });
   text.addEventListener("input", () => {
-    if (/^#[0-9a-f]{6}$/i.test(text.value)) {
-      picker.value = text.value;
+    try {
+      picker.value = toHex(parseHex(text.value));
+    } catch {
+      // Leave the picker on the last valid colour while the hex is incomplete.
     }
     updateCurrentMeasurement();
     invalidateCandidates();
+  });
+  text.addEventListener("change", () => {
+    try {
+      text.value = toHex(parseHex(text.value));
+    } catch {
+      // Keep what was typed so it can be corrected; the search reports the error.
+    }
   });
 }
 
@@ -81,8 +92,8 @@ function updateCurrentMeasurement() {
     const target = Number.parseFloat(targetInput.value);
     currentRatio.textContent = `${formatRatio(ratio)}:1`;
     currentVerdict.textContent = `${ratio + Number.EPSILON >= target ? "Meets" : "Below"} ${target}:1`;
-    sample.style.color = foregroundInput.value;
-    sample.style.background = backgroundInput.value;
+    sample.style.setProperty("--sample-foreground", toHex(foreground));
+    sample.style.setProperty("--sample-background", toHex(background));
   } catch {
     currentRatio.textContent = "Invalid pair";
     currentVerdict.textContent = "";
