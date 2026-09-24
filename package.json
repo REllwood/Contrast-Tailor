@@ -19,6 +19,6 @@
   "scripts": {
     "start": "node server.mjs",
     "test": "node --test",
-    "check": "npm test && node --check server.mjs && node --check src/contrast.mjs && node --check public/app.mjs"
+    "check": "npm test && node --check server.mjs && node --check public/contrast.mjs && node --check public/app.mjs"
   }
 }

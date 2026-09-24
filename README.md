@@ -33,6 +33,12 @@ npm start
 
 Open http://127.0.0.1:4173, enter a foreground and background colour, choose a target and press **Find tailored colours**. **Fit this colour** applies a candidate to the controls and preview.
 
+Use `npm start -- --port=8080` or set `PORT` to choose another port.
+
+## Hosting
+
+`public/` is a complete static site with no build step. Upload that folder to any static host, such as GitHub Pages, Netlify or an S3 bucket, and it works at the root or under a subpath. `npm start` is only a local convenience.
+
 ## Status
 
 v0.1 fits one colour pair at a time. Next up are whole-palette fitting, Figma token import and picking colours straight from an element on a page.
@@ -40,7 +46,7 @@ v0.1 fits one colour pair at a time. Next up are whole-palette fitting, Figma to
 ## Development
 
 ```sh
-npm test        # contrast maths and app tests
+npm test        # contrast maths, app, server and static-site tests
 npm run check   # tests plus syntax checks
 ```
 
