@@ -153,6 +153,21 @@ export function tailorForeground(foreground, background, target = 4.5, limit = 8
   const source = oklabToOklch(rgbToOklab(foreground));
   if (source.C < ROUNDING_CHROMA) source.C = 0;
   const sourceHex = toHex(foreground);
+  const sourceRatio = contrastRatio(foreground, background);
+  if (sourceRatio + Number.EPSILON >= target) {
+    // The smallest change that meets the target is no change at all.
+    return [
+      {
+        colour: parseHex(sourceHex),
+        hex: sourceHex,
+        ratio: sourceRatio,
+        distance: 0,
+        direction: "unchanged",
+        chromaRetained: source.C < NEUTRAL_CHROMA ? null : 1,
+        gamut: "sRGB"
+      }
+    ];
+  }
   const lightnesses = new Set([source.L]);
   for (let step = 0; step <= LIGHTNESS_STEPS; step += 1) {
     lightnesses.add(step / LIGHTNESS_STEPS);
@@ -189,8 +204,7 @@ export function tailorForeground(foreground, background, target = 4.5, limit = 8
       hex: sample.hex,
       ratio: sample.ratio,
       distance: perceptualDistance(foreground, sample.colour),
-      direction:
-        sample.hex === sourceHex ? "unchanged" : lch.L < source.L ? "darker" : "lighter",
+      direction: lch.L < source.L ? "darker" : "lighter",
       chromaRetained: source.C < NEUTRAL_CHROMA ? null : clamp(lch.C / source.C),
       gamut: "sRGB"
     });

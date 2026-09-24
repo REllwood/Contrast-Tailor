@@ -181,7 +181,7 @@ input[type="color"] {
   padding: clamp(2rem, 6vw, 5rem);
   border: 1px solid var(--ink);
   background: #fff;
-  color: #5c6cbe;
+  color: #7282d8;
 }
 
 .sample h2 {
@@ -229,6 +229,13 @@ input[type="color"] {
   margin: 0.3rem 0 0;
   font-family: ui-monospace, monospace;
   font-weight: 700;
+}
+
+.measurement dd.verdict {
+  margin-top: 0.15rem;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 400;
 }
 
 .candidates {

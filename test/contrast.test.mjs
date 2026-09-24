@@ -28,11 +28,11 @@ test("calculates reference contrast ratios without rounding the decision", () =>
 test("returns stable candidates that meet the requested contrast", () => {
   const foreground = parseHex("#5C6CBE");
   const background = parseHex("#FFFFFF");
-  const first = tailorForeground(foreground, background, 4.5);
-  const second = tailorForeground(foreground, background, 4.5);
-  assert.ok(first.length > 0);
+  const first = tailorForeground(foreground, background, 7);
+  const second = tailorForeground(foreground, background, 7);
+  assert.ok(first.length > 1);
   assert.deepEqual(first, second);
-  assert.ok(first.every((candidate) => candidate.ratio >= 4.5));
+  assert.ok(first.every((candidate) => candidate.ratio >= 7));
   assert.ok(first.every((candidate) => candidate.gamut === "sRGB" && isInSrgbGamut(candidate.colour)));
   assert.ok(first.every((candidate) => candidate.ratio === contrastRatio(parseHex(candidate.hex), background)));
   assert.ok(first[0].distance <= first.at(-1).distance);
@@ -59,6 +59,31 @@ test("finds candidates for saturated colours by giving up chroma, not hue", () =
       `${closest.hex} should keep the hue of ${foregroundHex}`
     );
   }
+});
+
+test("returns the colour unchanged when the pair already meets the target", () => {
+  for (const [foregroundHex, backgroundHex, target] of [
+    ["#1A1A1A", "#FFFFFF", 4.5],
+    ["#00FF00", "#000000", 4.5],
+    ["#5C6CBE", "#FFFFFF", 4.5],
+    ["#000000", "#FFFFFF", 21]
+  ]) {
+    const foreground = parseHex(foregroundHex);
+    const background = parseHex(backgroundHex);
+    const candidates = tailorForeground(foreground, background, target);
+    assert.equal(candidates.length, 1);
+    assert.equal(candidates[0].hex, foregroundHex);
+    assert.equal(candidates[0].direction, "unchanged");
+    assert.equal(candidates[0].distance, 0);
+    assert.equal(candidates[0].ratio, contrastRatio(foreground, background));
+  }
+});
+
+test("labels changed candidates as darker or lighter", () => {
+  const candidates = tailorForeground(parseHex("#808080"), parseHex("#808080"), 3, 100);
+  assert.ok(candidates.some((candidate) => candidate.direction === "darker"));
+  assert.ok(candidates.some((candidate) => candidate.direction === "lighter"));
+  assert.ok(candidates.every((candidate) => candidate.direction !== "unchanged"));
 });
 
 test("keeps full chroma when lightness alone meets the target", () => {
